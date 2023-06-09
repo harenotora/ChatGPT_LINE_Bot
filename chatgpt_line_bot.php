@@ -5,27 +5,28 @@ require_once "vendor/autoload.php";
 
 use Orhanerday\OpenAi\OpenAi;
 
-$channel_id = "";
-$channel_secret = "";
-$bot_mid = "";
-$fortune_frag = 0;
-$image_frag = 0;
-$accessToken = "";
+//LINE API定義
+$accessToken = ""; #チャンネルアクセストークン
 
+//OpenAI API用定義
+$api_key = ""; #OpenAI API keys
+
+//画像送信用フラグ
+$image_frag = 0;
 
 //ユーザーからのメッセージ取得
 $json_string = file_get_contents('php://input');
 echo $json_string;
 $json_object = json_decode($json_string);
 
-$displayname = "";
+$displayname = ""; //ここにユーザの名前が入ってくる
 
 //取得データ
-$replyToken = $json_object->{"events"}[0]->{"replyToken"};        //返信用トークン
-$to = $json_object->{"events"}[0]->{"source"}->{"userId"};
-$source_type = $json_object->{"events"}[0]->{"source"}->{"type"};
-$message_type = $json_object->{"events"}[0]->{"message"}->{"type"};    //メッセージタイプ
-$message_text = $json_object->{"events"}[0]->{"message"}->{"text"};    //メッセージ内容
+$replyToken = $json_object->{"events"}[0]->{"replyToken"}; //返信用トークン
+$to = $json_object->{"events"}[0]->{"source"}->{"userId"}; //返信先
+$source_type = $json_object->{"events"}[0]->{"source"}->{"type"}; //ソースタイプ
+$message_type = $json_object->{"events"}[0]->{"message"}->{"type"}; //メッセージタイプ
+$message_text = $json_object->{"events"}[0]->{"message"}->{"text"}; //メッセージ内容
 
 $user_profiles_url = curl_init("https://api.line.me/v2/bot/profile/" . urlencode($to));
 curl_setopt($user_profiles_url, CURLOPT_RETURNTRANSFER, true);
@@ -182,21 +183,10 @@ function sending_image($accessToken, $replyToken, $imageurl)
     curl_close($curl);
 }
 
-function time_diff($time_from, $time_to)
-{
-    // 日時差を秒数で取得
-    $dif = $time_to - $time_from;
-    // 時間単位の差
-    $dif_time = date("H:i:s", $dif);
-    // 日付単位の差
-    $dif_days = (strtotime(date("Y-m-d", $dif)) - strtotime("1970-01-01")) / 86400;
-    return "{$dif_days}日と{$dif_time}";
-}
-
-function chatgpt($query)
+function chatgpt($api_key, $query)
 {
     error_log("ChatGPT呼び出し\n", 3, "./my-errors.log");
-    $open_ai = new OpenAi(''); // <- define the variable.
+    $open_ai = new OpenAi($api_key);
 
     $chat = $open_ai->chat([
         'model' => 'gpt-3.5-turbo',
@@ -221,16 +211,15 @@ function chatgpt($query)
     ]);
     $garray = json_decode($chat);
     $chatgptanswer = $garray->choices[0]->message->content;
-    //$chatgptanswer = str_replace(array("\r\n", "\r", "\n"), "", $chatgptanswer);
     error_log("ChatGPT終了\n", 3, "./my-errors.log");
     return $chatgptanswer;
 }
 
-function dall_e($query)
+function dall_e($api_key, $query)
 {
     error_log("DALL・E呼び出し\n", 3, "./my-errors.log");
     error_log("プロンプト:" . $query . "\n", 3, "./my-errors.log");
-    $open_ai = new OpenAi(''); // <- define the variable.
+    $open_ai = new OpenAi($api_key);
     $response =  $open_ai->image([
         'prompt' => $query,
         'n' => 1,
