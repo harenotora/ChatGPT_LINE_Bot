@@ -62,7 +62,7 @@ if ($retflag == 1) {
     $q = preg_replace('/ことら/', '', $message_text);
     $q = preg_replace('/ことら、/', '', $message_text);
     $errmsg = "ごめん、質問が長すぎてよくわからなかったよ……。もうちょっと短い文章にしてくれる？";
-    $ret = chatgpt($q);
+    $ret = chatgpt($api_key, $q);
     //$randmsg = preg_replace('/\<br.*\>/', '\n', $ret);
     $randmsg = str_replace("\n", "\n\r", $ret);
     //$randmsg = $ret;
@@ -100,7 +100,7 @@ if ((preg_match("/かいて$/", $message_text) || preg_match("/書いて$/", $me
     if (preg_match("/写真/", $message_text)) {
         $q = $q . ",High quality photo";
     }
-    $randmsg = dall_e($q);
+    $randmsg = dall_e($api_key, $q);
     //$randmsg = $q;
     if ($randmsg) {
         $fortune_frag = 1;
